@@ -59,11 +59,7 @@ def scan_ip_range(ip_range, ports=None, timeout=2, verbose=False):
             result = future.result()
             if result["status"] == "up":
                 live_hosts.append(result)
-                if verbose:
-                    print(f"Host {result['ip']} is up, Hostname: {result['hostname']}, Open Ports: {result['open_ports']}")
-            else:
-                if verbose:
-                    print(f"Host {result['ip']} is down")
+                
     return live_hosts
 
 
