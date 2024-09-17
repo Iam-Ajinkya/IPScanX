@@ -112,16 +112,20 @@ def main():
     if args.inactive:
         live_hosts = [host for host in live_hosts if host['status'] == 'down']
 
-    # Display results in real-time and save if output/format is provided
+    # Show the results on the command-line during runtime
     if live_hosts:
         for host in live_hosts:
             print(f"{host['ip']} - {host['status']} - Hostname: {host['hostname']} - Open Ports: {host['open_ports']}")
+        
+        # Save the results if output file and format are specified
         if args.output and args.format:
             save_results(live_hosts, args.output, args.format)
             print(f"\nResults have been saved to {args.output} in {args.format} format.")
     else:
         print("No live hosts found during the scan.")
-    
+        if args.output and args.format:
+            print(f"No file was created as there are no live hosts found.")
+
 
 if __name__ == "__main__":
     main()
