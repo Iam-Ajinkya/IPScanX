@@ -50,16 +50,23 @@ def scan_ip(ip, ports=None, timeout=2):
     return result
 
 
-def scan_ip_range(ip_range, ports=None, timeout=2, verbose=False):
+def scan_ip_range(ip_range, ports=None, timeout=2, exclude_ips=None):
     live_hosts = []
     ip_list = list(ip_network(ip_range).hosts())
+    
+    if exclude_ips:
+        excluded_ips = set()
+        ip_list = [ip for ip in ip_list if str(ip) not in exclude_ips]
+        excluded_ips = [ip for ip in exclude_ips if str(ip) in exclude_ips]
+        if excluded_ips:
+            print(f"Excluded IPs from scan: {', '.join(excluded_ips)}")
+    
     with ThreadPoolExecutor(max_workers=100) as executor:
         futures = {executor.submit(scan_ip, ip, ports, timeout): ip for ip in ip_list}
         for future in tqdm(futures, total=len(futures), desc="Scanning IP Range"):
             result = future.result()
             if result["status"] == "up":
                 live_hosts.append(result)
-                
     return live_hosts
 
 
@@ -100,7 +107,7 @@ def main():
     exclude_ips = set(args.exclude) if args.exclude else set()
 
     print(f"Starting scan on IP range: {ip_range}")
-    live_hosts = scan_ip_range(ip_range, ports, timeout, verbose)
+    live_hosts = scan_ip_range(ip_range, ports, timeout, exclude_ips)
 
     # Filtering active/inactive hosts
     if args.active:
