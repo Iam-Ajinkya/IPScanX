@@ -9,7 +9,6 @@ import json
 import csv
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
-from time import sleep
 
 
 def ping_ip(ip, timeout=2):
@@ -62,6 +61,9 @@ def scan_ip_range(ip_range, ports=None, timeout=2, verbose=False):
                 live_hosts.append(result)
                 if verbose:
                     print(f"Host {result['ip']} is up, Hostname: {result['hostname']}, Open Ports: {result['open_ports']}")
+            else:
+                if verbose:
+                    print(f"Host {result['ip']} is down")
     return live_hosts
 
 
@@ -77,7 +79,12 @@ def save_results(live_hosts, output_file, file_format):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="A CLI-based IP and Port Scanner")
+    parser = argparse.ArgumentParser(
+        description="A CLI-based IP and Port Scanner",
+        usage='%(prog)s --range <IP_RANGE> [options]',
+        epilog="Example: python ip_scanner.py --range 192.168.1.0/24 --ports 22 80 443 --output results.json --format json --verbose"
+    )
+    
     parser.add_argument('--range', required=True, help="IP range in CIDR notation (e.g., 192.168.1.0/24)")
     parser.add_argument('--ports', nargs='+', type=int, help="Ports to scan (e.g., 22 80 443)")
     parser.add_argument('--timeout', type=int, default=2, help="Timeout in seconds for ping and port scans")
@@ -87,7 +94,7 @@ def main():
     parser.add_argument('--exclude', nargs='+', help="IP addresses to exclude from scanning")
     parser.add_argument('--active', action='store_true', help="Show only active (up) hosts")
     parser.add_argument('--inactive', action='store_true', help="Show only inactive (down) hosts")
-    
+
     args = parser.parse_args()
 
     ip_range = args.range
@@ -95,21 +102,26 @@ def main():
     timeout = args.timeout
     verbose = args.verbose
     exclude_ips = set(args.exclude) if args.exclude else set()
-    
+
     print(f"Starting scan on IP range: {ip_range}")
     live_hosts = scan_ip_range(ip_range, ports, timeout, verbose)
-    
+
+    # Filtering active/inactive hosts
     if args.active:
         live_hosts = [host for host in live_hosts if host['status'] == 'up']
     if args.inactive:
         live_hosts = [host for host in live_hosts if host['status'] == 'down']
 
-    if args.output and live_hosts:
-        save_results(live_hosts, args.output, args.format)
+    # Display results in real-time and save if output/format is provided
+    if live_hosts:
+        for host in live_hosts:
+            print(f"{host['ip']} - {host['status']} - Hostname: {host['hostname']} - Open Ports: {host['open_ports']}")
+        if args.output and args.format:
+            save_results(live_hosts, args.output, args.format)
+            print(f"\nResults have been saved to {args.output} in {args.format} format.")
+    else:
+        print("No live hosts found during the scan.")
     
-    print("\nScan completed. Results:")
-    for host in live_hosts:
-        print(f"{host['ip']} - {host['status']} - Hostname: {host['hostname']} - Open Ports: {host['open_ports']}")
 
 if __name__ == "__main__":
     main()
