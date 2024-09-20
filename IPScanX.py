@@ -53,11 +53,10 @@ def scan_ip(ip, ports=None, timeout=2):
 def scan_ip_range(ip_range, ports=None, timeout=2, exclude_ips=None):
     live_hosts = []
     ip_list = list(ip_network(ip_range).hosts())
-    
+
     if exclude_ips:
-        excluded_ips = set()
-        ip_list = [ip for ip in ip_list if str(ip) not in exclude_ips]
         excluded_ips = [ip for ip in exclude_ips if str(ip) in exclude_ips]
+        ip_list = [ip for ip in ip_list if str(ip) not in exclude_ips]
         if excluded_ips:
             print(f"Excluded IPs from scan: {', '.join(excluded_ips)}")
     
@@ -65,8 +64,7 @@ def scan_ip_range(ip_range, ports=None, timeout=2, exclude_ips=None):
         futures = {executor.submit(scan_ip, ip, ports, timeout): ip for ip in ip_list}
         for future in tqdm(futures, total=len(futures), desc="Scanning IP Range"):
             result = future.result()
-            if result["status"] == "up":
-                live_hosts.append(result)
+            live_hosts.append(result)
     return live_hosts
 
 
@@ -100,6 +98,10 @@ def main():
 
     args = parser.parse_args()
 
+    # Validate that both active and inactive flags are not used together
+    if args.active and args.inactive:
+        parser.error("You cannot use both --active and --inactive flags together. Choose one.")
+
     ip_range = args.range
     ports = args.ports if args.ports else []
     timeout = args.timeout
@@ -109,10 +111,10 @@ def main():
     print(f"Starting scan on IP range: {ip_range}")
     live_hosts = scan_ip_range(ip_range, ports, timeout, exclude_ips)
 
-    # Filtering active/inactive hosts
+    # Filter results based on active/inactive flags
     if args.active:
         live_hosts = [host for host in live_hosts if host['status'] == 'up']
-    if args.inactive:
+    elif args.inactive:
         live_hosts = [host for host in live_hosts if host['status'] == 'down']
 
     # Show the results on the command-line during runtime
