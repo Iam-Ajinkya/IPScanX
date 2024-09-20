@@ -79,6 +79,17 @@ def save_results(live_hosts, output_file, file_format):
             writer.writerows(live_hosts)
 
 
+def parse_ports(port_arg):
+    ports = set()
+    for part in port_arg.split(","):
+        if "-" in part:  # Handle port range
+            start, end = map(int, part.split("-"))
+            ports.update(range(start, end + 1))
+        else:  # Handle individual ports
+            ports.add(int(part))
+    return sorted(ports)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="A CLI-based IP and Port Scanner",
@@ -87,7 +98,7 @@ def main():
     )
     
     parser.add_argument('--range', required=True, help="IP range in CIDR notation (e.g., 192.168.1.0/24)")
-    parser.add_argument('--ports', nargs='+', type=int, help="Ports to scan (e.g., 22 80 443)")
+    parser.add_argument('--ports', help="Specify ports or port ranges to scan (e.g., 22,80,443 or 20-1024)")
     parser.add_argument('--timeout', type=int, default=2, help="Timeout in seconds for ping and port scans")
     parser.add_argument('--output', help="Save results to a file (e.g., results.json or results.csv)")
     parser.add_argument('--format', choices=['json', 'csv'], help="Output file format (json or csv)")
@@ -103,7 +114,7 @@ def main():
         parser.error("You cannot use both --active and --inactive flags together. Choose one.")
 
     ip_range = args.range
-    ports = args.ports if args.ports else []
+    ports = parse_ports(args.ports) if args.ports else []
     timeout = args.timeout
     verbose = args.verbose
     exclude_ips = set(args.exclude) if args.exclude else set()
