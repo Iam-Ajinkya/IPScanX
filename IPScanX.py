@@ -120,7 +120,10 @@ def main():
     # Show the results on the command-line during runtime
     if live_hosts:
         for host in live_hosts:
-            print(f"{host['ip']} - {host['status']} - Hostname: {host['hostname']} - Open Ports: {host['open_ports']}")
+            if ports:  # Show open ports only if --ports flag is used
+                print(f"{host['ip']} - {host['status']} - Hostname: {host['hostname']} - Open Ports: {host['open_ports']}")
+            else:
+                print(f"{host['ip']} - {host['status']} - Hostname: {host['hostname']}")
         
         # Save the results if output file and format are specified
         if args.output and args.format:
