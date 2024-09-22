@@ -68,5 +68,7 @@ coverage.xml
 
 # Logs
 *.log
+*.csv
+*.json
 logs/
 debug.log
