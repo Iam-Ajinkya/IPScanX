@@ -2,7 +2,7 @@
 <html lang="en">
 
 <body>
-    <h1>IPScanX</h1>
+    <h1>IPScanX - The IP Scanner</h1>
    
 <h2>Table of Contents</h2>
     <ul>
