@@ -52,7 +52,7 @@ cd IPScanX
     <pre><code>pip install -r requirements.txt
 </code></pre>
     <p><em>If you don’t have <code>requirements.txt</code>, here are the dependencies:</em></p>
-    <pre><code>pip install tqdm
+    <pre><code>pip install tqdm concurrent.futures argparse ipaddress
 </code></pre>
 
 <h2 id="usage">Usage</h2>
